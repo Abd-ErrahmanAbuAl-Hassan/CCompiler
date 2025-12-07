@@ -1,0 +1,7 @@
+CCompilerProject.sln
+.vs
+bin
+obj
+CCompiler.csproj
+Parser.csproj
+Scanner.csproj
