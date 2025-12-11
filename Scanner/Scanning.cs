@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 
 namespace Scanner
 {
@@ -33,12 +34,12 @@ namespace Scanner
                 // Handle comments
                 if (current == '/')
                 {
-                    if (Match("//"))
+                    if ($"{current}{PeekAhead()}" == "//")
                     {
                         _tokens.Add(HandleLineComment());
                         continue;
                     }
-                    else if (Match("/*"))
+                    else if ($"{current}{PeekAhead()}" == "/*")
                     {
                         _tokens.Add(HandleMultiLineComment());
                         continue;
@@ -74,18 +75,13 @@ namespace Scanner
                 }
 
                 // Handle operators (multi-character first)
-                bool matchedOperator = false;
-                foreach (var op in CDefinitions.MultiCharOperators)
+                string op = $"{current}{PeekAhead()}";
+                if (CDefinitions.MultiCharOperators.Contains($"{current}{PeekAhead()}"))
                 {
-                    if (Match(op))
-                    {
-                        _tokens.Add(HandleOperator(op.Length));
-                        matchedOperator = true;
-                        break;
-                    }
-                }
+                    _tokens.Add(HandleOperator(op.Length));
+                    continue;
 
-                if (matchedOperator) continue;
+                }
 
                 // Handle single-character operators
                 if (CDefinitions.SingleCharOperators.Contains(current))
@@ -109,16 +105,6 @@ namespace Scanner
 
             // Add EOF token
             _tokens.Add(new Token(TokenType.EOF, "", _line, _column));
-
-            // Report any scanning errors
-            if (_errors.Count > 0)
-            {
-                Console.WriteLine("Scanning errors:");
-                foreach (var error in _errors)
-                {
-                    Console.WriteLine($"  {error}");
-                }
-            }
 
             return _tokens;
         }
@@ -234,16 +220,6 @@ namespace Scanner
                 {
                     _errors.Add($"Error at {_line}:{startColumn}: Invalid exponent in number");
                 }
-            }
-
-            // Handle hex numbers (0x prefix)
-            if (start + 1 < _source.Length && _source[start] == '0' &&
-                (_source[start + 1] == 'x' || _source[start + 1] == 'X'))
-            {
-                // Reset and parse hex
-                _index = start + 2;
-                while (!IsAtEnd() && IsHexDigit(Peek()))
-                    Advance();
             }
 
             string number = _source.Substring(start, _index - start);
@@ -382,21 +358,6 @@ namespace Scanner
         {
             _index += count;
         }
-
-        private bool Match(string expected)
-        {
-            if (_index + expected.Length > _source.Length) return false;
-
-            for (int i = 0; i < expected.Length; i++)
-            {
-                if (_source[_index + i] != expected[i])
-                    return false;
-            }
-            return true;
-        }
-
-        private bool IsHexDigit(char c) => char.IsDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-
         private int GetLineStart(int position)
         {
             int start = 0;

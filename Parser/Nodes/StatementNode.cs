@@ -105,32 +105,4 @@ namespace Parser.Nodes
         public override string ToString() => "Continue[]";
     }
 
-    public class SwitchStmtNode : StatementNode
-    {
-        public ExpressionNode Expression { get; set; }
-        public List<CaseNode> Cases { get; } = new();
-
-        public override string ToString()
-        {
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine($"Switch[{Expression}] {{");
-            foreach (var caseNode in Cases)
-                sb.AppendLine($"  {caseNode}");
-            sb.Append("}");
-            return sb.ToString();
-        }
-    }
-    public class CaseNode : AstNode
-    {
-        public ExpressionNode Value { get; set; } // null for default case
-        public List<StatementNode> Statements { get; } = new();
-        public bool IsDefault => Value == null;
-
-        public override string ToString()
-        {
-            if (IsDefault)
-                return "default: ...";
-            return $"case {Value}: ...";
-        }
-    }
 }

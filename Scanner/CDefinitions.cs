@@ -6,18 +6,18 @@
         {
             // Data types
             "auto", "bool", "char", "double", "float", "int", "long", "short",
-            "signed", "unsigned", "void", "_Bool", "_Complex", "_Imaginary",
+            "signed", "unsigned", "void",
             
             // Storage classes
-            "extern", "inline", "register", "restrict", "static", "typedef",
+            "restrict", "static",
             
             // Control flow
-            "break", "case", "continue", "default", "do", "else", "enum",
-            "for", "goto", "if", "return", "sizeof", "struct", "switch",
+            "break", "case", "continue", "default", "do", "else",
+            "for", "goto", "if", "return", "switch",
             "union", "while",
             
             // Special
-            "const", "volatile", "main"
+            "const", "main"
         };
 
         // Multi-char operators must be ordered by length (longest first)
@@ -38,16 +38,11 @@
             // Logical
             "&&", "||",
             
-            // Member access
-            "->"
         };
 
         public static readonly HashSet<char> SingleCharOperators = new()
         {
-            '+', '-', '*', '/', '%',
-            '&', '|', '^', '~', '!',
-            '<', '>', '=', '?', ':',
-            '.', ','
+            '+', '-', '*', '/', '%','&', '|', '^', '~', '!', '<', '>', '=','.', ','
         };
 
         public static readonly HashSet<char> Delimiters = new()

@@ -15,7 +15,6 @@
         public override string ToString()
         {
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("=== Program ===");
             sb.AppendLine("Pre-main declarations:");
             foreach (var decl in PreMainDecls)
                 sb.AppendLine($"  {decl}");

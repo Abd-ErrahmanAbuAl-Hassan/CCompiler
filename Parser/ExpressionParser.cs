@@ -7,14 +7,16 @@ namespace Parser
     {
         public ExpressionParser(List<Token> tokens) : base(tokens) { }
 
-        public ExpressionNode ParseExpression()
+        public ExpressionNode ParseExpression() => ParseAssignment();
+
+        public ExpressionNode ParseCondition()
         {
-            return ParseAssignment();
+            return ParseLogicalOr();  
         }
 
         private ExpressionNode ParseAssignment()
         {
-            var left = ParseLogicalOr();
+            var left = ParseLogicalOr();  
 
             if (IsAssignmentOperator())
             {
@@ -34,55 +36,35 @@ namespace Parser
             return left;
         }
 
-        private ExpressionNode ParseLogicalOr()
-        {
-            return ParseLeftAssociativeBinary(ParseLogicalAnd, "||");
-        }
+        private ExpressionNode ParseLogicalOr() =>
+            ParseLeftAssociativeBinary(ParseLogicalAnd, "||");
 
-        private ExpressionNode ParseLogicalAnd()
-        {
-            return ParseLeftAssociativeBinary(ParseBitwiseOr, "&&");
-        }
+        private ExpressionNode ParseLogicalAnd() =>
+            ParseLeftAssociativeBinary(ParseBitwiseOr, "&&");
 
-        private ExpressionNode ParseBitwiseOr()
-        {
-            return ParseLeftAssociativeBinary(ParseBitwiseXor, "|");
-        }
+        private ExpressionNode ParseBitwiseOr() =>
+            ParseLeftAssociativeBinary(ParseBitwiseXor, "|");
 
-        private ExpressionNode ParseBitwiseXor()
-        {
-            return ParseLeftAssociativeBinary(ParseBitwiseAnd, "^");
-        }
+        private ExpressionNode ParseBitwiseXor() =>
+            ParseLeftAssociativeBinary(ParseBitwiseAnd, "^");
 
-        private ExpressionNode ParseBitwiseAnd()
-        {
-            return ParseLeftAssociativeBinary(ParseEquality, "&");
-        }
+        private ExpressionNode ParseBitwiseAnd() =>
+            ParseLeftAssociativeBinary(ParseEquality, "&");
 
-        private ExpressionNode ParseEquality()
-        {
-            return ParseLeftAssociativeBinary(ParseRelational, "==", "!=");
-        }
+        private ExpressionNode ParseEquality() =>
+            ParseLeftAssociativeBinary(ParseRelational, "==", "!=");
 
-        private ExpressionNode ParseRelational()
-        {
-            return ParseLeftAssociativeBinary(ParseShift, "<", ">", "<=", ">=");
-        }
+        private ExpressionNode ParseRelational() =>
+            ParseLeftAssociativeBinary(ParseShift, "<", ">", "<=", ">=");
 
-        private ExpressionNode ParseShift()
-        {
-            return ParseLeftAssociativeBinary(ParseAdditive, "<<", ">>");
-        }
+        private ExpressionNode ParseShift() =>
+            ParseLeftAssociativeBinary(ParseAdditive, "<<", ">>");
 
-        private ExpressionNode ParseAdditive()
-        {
-            return ParseLeftAssociativeBinary(ParseMultiplicative, "+", "-");
-        }
+        private ExpressionNode ParseAdditive() =>
+            ParseLeftAssociativeBinary(ParseMultiplicative, "+", "-");
 
-        private ExpressionNode ParseMultiplicative()
-        {
-            return ParseLeftAssociativeBinary(ParseUnary, "*", "/", "%");
-        }
+        private ExpressionNode ParseMultiplicative() =>
+            ParseLeftAssociativeBinary(ParseUnary, "*", "/", "%");
 
         private ExpressionNode ParseUnary()
         {
@@ -112,43 +94,15 @@ namespace Parser
             {
                 if (CheckDelimiter('['))
                 {
-                    Consume();
-                    var index = ParseExpression();
-                    ExpectDelimiter(']');
-
-                    expr = new IndexExpressionNode
-                    {
-                        Target = expr,
-                        Index = index
-                    };
+                    expr = ParseArrayIndex(expr);
                 }
                 else if (CheckDelimiter('('))
                 {
-                    Consume();
-                    var call = new CallExpressionNode { Callee = expr };
-
-                    if (!CheckDelimiter(')'))
-                    {
-                        var args = ParseArgumentList();
-                        foreach (var arg in args)
-                            call.Args.Add(arg);
-                    }
-
-                    ExpectDelimiter(')');
-                    expr = call;
+                    expr = ParseFunctionCall(expr);
                 }
                 else if (CheckOperator("++") || CheckOperator("--"))
                 {
-                    var opToken = Consume();
-
-                    expr = new UnaryExpressionNode
-                    {
-                        Op = opToken.Value,
-                        Operand = expr,
-                        IsPrefix = false,
-                        Line = opToken.Line,
-                        Column = opToken.Column
-                    };
+                    expr = ParsePostfixUnary(expr);
                 }
                 else
                 {
@@ -169,67 +123,124 @@ namespace Parser
 
             var token = Lookahead();
 
-            if (token.Type == TokenType.Number)
+            switch (token.Type)
             {
-                Consume();
-                return new NumberExpressionNode
-                {
-                    Value = token.Value,
-                    Line = token.Line,
-                    Column = token.Column
-                };
-            }
+                case TokenType.Number:
+                    return ParseNumberLiteral();
+                case TokenType.StringLiteral:
+                    return ParseStringLiteral();
+                case TokenType.CharacterLiteral:
+                    return ParseCharacterLiteral();
+                case TokenType.Identifier:
+                    return ParseIdentifier();
+                default:
+                    if (CheckDelimiter('('))
+                        return ParseParenthesizedExpression();
 
-            if (token.Type == TokenType.StringLiteral)
-            {
-                Consume();
-                return new StringExpressionNode
-                {
-                    Value = token.Value,
-                    Line = token.Line,
-                    Column = token.Column
-                };
+                    Error($"Expected primary expression, got {token.Type} '{token.Value}'", token);
+                    return null;
             }
-
-            if (token.Type == TokenType.CharacterLiteral)
-            {
-                Consume();
-                return new CharacterExpressionNode
-                {
-                    Value = token.Value.Length > 0 ? token.Value[0] : '\0',
-                    Line = token.Line,
-                    Column = token.Column
-                };
-            }
-
-            if (token.Type == TokenType.Identifier)
-            {
-                Consume();
-                return new IdentifierExpressionNode
-                {
-                    Name = token.Value,
-                    Line = token.Line,
-                    Column = token.Column
-                };
-            }
-
-            if (CheckDelimiter('('))
-            {
-                Consume();
-                var expr = ParseExpression();
-                ExpectDelimiter(')');
-                return expr;
-            }
-
-            Error($"Expected primary expression, got {token.Type} '{token.Value}'", token);
-            return null;
         }
 
+        private ExpressionNode ParseNumberLiteral()
+        {
+            var token = Consume();
+            return new NumberExpressionNode
+            {
+                Value = token.Value,
+                Line = token.Line,
+                Column = token.Column
+            };
+        }
+
+        private ExpressionNode ParseStringLiteral()
+        {
+            var token = Consume();
+            return new StringExpressionNode
+            {
+                Value = token.Value,
+                Line = token.Line,
+                Column = token.Column
+            };
+        }
+
+        private ExpressionNode ParseCharacterLiteral()
+        {
+            var token = Consume();
+            char value = token.Value.Length > 0 ? token.Value[0] : '\0';
+            return new CharacterExpressionNode
+            {
+                Value = value,
+                Line = token.Line,
+                Column = token.Column
+            };
+        }
+
+        private ExpressionNode ParseIdentifier()
+        {
+            var token = Consume();
+            return new IdentifierExpressionNode
+            {
+                Name = token.Value,
+                Line = token.Line,
+                Column = token.Column
+            };
+        }
+
+        private ExpressionNode ParseParenthesizedExpression()
+        {
+            Consume(); // '('
+            var expr = ParseExpression();
+            ExpectDelimiter(')');
+            return expr;
+        }
+
+        private ExpressionNode ParseArrayIndex(ExpressionNode target)
+        {
+            Consume(); // '['
+            var index = ParseExpression();
+            ExpectDelimiter(']');
+
+            return new IndexExpressionNode
+            {
+                Target = target,
+                Index = index
+            };
+        }
+
+        private ExpressionNode ParseFunctionCall(ExpressionNode callee)
+        {
+            Consume(); // '('
+            var call = new CallExpressionNode { Callee = callee };
+
+            if (!CheckDelimiter(')'))
+            {
+                var args = ParseArgumentList();
+                foreach (var arg in args)
+                    call.Args.Add(arg);
+            }
+
+            ExpectDelimiter(')');
+            return call;
+        }
+
+        private ExpressionNode ParsePostfixUnary(ExpressionNode operand)
+        {
+            var opToken = Consume();
+            return new UnaryExpressionNode
+            {
+                Op = opToken.Value,
+                Operand = operand,
+                IsPrefix = false,
+                Line = opToken.Line,
+                Column = opToken.Column
+            };
+        }
         private ExpressionNode ParseLeftAssociativeBinary(Func<ExpressionNode> parseNext, params string[] operators)
         {
             var left = parseNext();
 
-            while (!IsAtEnd && operators.Contains(Lookahead().Value))
+            while (!IsAtEnd && Lookahead().Type == TokenType.Operator && operators.Contains(Lookahead().Value))
             {
                 var opToken = Consume();
                 var right = parseNext();
@@ -254,12 +265,6 @@ namespace Parser
             do
             {
                 args.Add(ParseExpression());
-
-                if (CheckDelimiter(','))
-                {
-                    Consume();
-                    continue;
-                }
 
                 if (CheckOperator(","))
                 {

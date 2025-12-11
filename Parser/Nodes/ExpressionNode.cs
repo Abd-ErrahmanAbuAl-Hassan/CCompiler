@@ -84,25 +84,7 @@ namespace Parser.Nodes
         public override string ToString() => $"Index[{Target}[{Index}]]";
     }
 
-    public class MemberAccessExpressionNode : ExpressionNode
-    {
-        public ExpressionNode Target { get; set; }
-        public string MemberName { get; set; }
-        public bool IsArrow { get; set; } // true for ->, false for .
+    
 
-        public override string ToString()
-        {
-            var op = IsArrow ? "->" : ".";
-            return $"Member[{Target}{op}{MemberName}]";
-        }
-    }
-
-    public class TernaryExpressionNode : ExpressionNode
-    {
-        public ExpressionNode Condition { get; set; }
-        public ExpressionNode TrueExpr { get; set; }
-        public ExpressionNode FalseExpr { get; set; }
-
-        public override string ToString() => $"Ternary[{Condition} ? {TrueExpr} : {FalseExpr}]";
-    }
+   
 }

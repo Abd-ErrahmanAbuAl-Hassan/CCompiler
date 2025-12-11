@@ -2,7 +2,7 @@
 
 namespace Parser
 {
-    public class ParserCore
+    public abstract class ParserCore
     {
         protected readonly List<Token> tokens;
         protected int index = 0;
@@ -27,12 +27,12 @@ namespace Parser
             tokens = _tokens.Where(t => t.Type != TokenType.Comment && t.Type != TokenType.Whitespace).ToList();
         }
 
-        protected Token Lookahead()
+       
+        protected Token Lookahead(int offset=0)
         {
-            int i = index;
-            if (i >= tokens.Count)
+            if (index + offset >= tokens.Count)
                 return new Token(TokenType.EOF, "", -1, -1);
-            return tokens[i];
+            return tokens[index + offset];
         }
 
         protected bool IsAtEnd => index >= tokens.Count || Lookahead().Type == TokenType.EOF;
@@ -45,13 +45,26 @@ namespace Parser
 
         protected void Synchronize()
         {
+            // Skip tokens until we find a statement boundary
             while (!IsAtEnd)
             {
-                if (Lookahead().Type == TokenType.Delimiter &&
-                    (Lookahead().Value == ";" || Lookahead().Value == "}"))
+                if (Lookahead().Type == TokenType.Delimiter && Lookahead().Value == ";")
                 {
-                    Consume();
-                    break;
+                    Consume(); // Consume the ';' and break
+                    return;
+                }
+                else if (Lookahead().Type == TokenType.Delimiter && Lookahead().Value == "}")
+                {
+                    return; // Don't consume '}', let ParseBlock handle it
+                }
+                else if (Lookahead().Type == TokenType.Keyword)
+                {
+                    var kw = Lookahead().Value;
+                    if (kw == "if" || kw == "while" || kw == "do" || kw == "for" ||
+                        kw == "return" || kw == "break" || kw == "continue")
+                    {
+                        return;
+                    }
                 }
                 Consume();
             }
@@ -84,9 +97,7 @@ namespace Parser
             }
 
             var token = Lookahead();
-
-            if ((token.Type == TokenType.Delimiter && token.Value == delimiter.ToString()) ||
-                (delimiter == ',' && token.Type == TokenType.Operator && token.Value == ","))
+            if (token.Type == TokenType.Delimiter && token.Value == delimiter.ToString())
             {
                 return Consume();
             }
@@ -98,24 +109,14 @@ namespace Parser
         protected Token ExpectKeyword(string keyword) => ExpectToken(TokenType.Keyword, keyword);
         protected Token ExpectIdentifier() => ExpectToken(TokenType.Identifier);
 
-        protected bool CheckKeyword(string keyword) => !IsAtEnd && Lookahead().Type == TokenType.Keyword && Lookahead().Value == keyword;
-        protected bool CheckDelimiter(char delimiter) => !IsAtEnd && Lookahead().Type == TokenType.Delimiter && Lookahead().Value == delimiter.ToString();
-        protected bool CheckOperator(string op) => !IsAtEnd && Lookahead().Type == TokenType.Operator && Lookahead().Value == op;
+        protected bool CheckKeyword(string keyword) =>
+            !IsAtEnd && Lookahead().Type == TokenType.Keyword && Lookahead().Value == keyword;
 
-        protected bool IsAssignmentOperator()
-        {
-            if (Lookahead().Type != TokenType.Operator) return false;
-            var op = Lookahead().Value;
-            return op == "=" || op.EndsWith("=");
-        }
+        protected bool CheckDelimiter(char delimiter) =>
+            !IsAtEnd && Lookahead().Type == TokenType.Delimiter && Lookahead().Value == delimiter.ToString();
 
-        protected bool IsPrefixOperator()
-        {
-            if (Lookahead().Type != TokenType.Operator) return false;
-            var op = Lookahead().Value;
-            return op == "+" || op == "-" || op == "!" || op == "~" ||
-                   op == "++" || op == "--" || op == "&" || op == "*";
-        }
+        protected bool CheckOperator(string op) =>
+            !IsAtEnd && Lookahead().Type == TokenType.Operator && Lookahead().Value == op;
 
         protected bool IsDeclarationStart()
         {
@@ -135,14 +136,21 @@ namespace Parser
             try
             {
                 if (!IsDeclarationStart()) return false;
-                var typeToken = tokens[savedIndex];
+
+                
                 if (savedIndex + 1 >= tokens.Count) return false;
-                var secondToken = tokens[savedIndex + 1];
-                if (secondToken.Type != TokenType.Keyword || secondToken.Value != "main") return false;
+                var typeToken = tokens[savedIndex];
+
+                
+                if (savedIndex + 1 >= tokens.Count) return false;
+                var mainToken = tokens[savedIndex + 1];
+                if (mainToken.Type != TokenType.Keyword || mainToken.Value != "main")
+                    return false;
+
+                
                 if (savedIndex + 2 >= tokens.Count) return false;
-                var thirdToken = tokens[savedIndex + 2];
-                if (thirdToken.Type != TokenType.Delimiter || thirdToken.Value != "(") return false;
-                return true;
+                var parenToken = tokens[savedIndex + 2];
+                return parenToken.Type == TokenType.Delimiter && parenToken.Value == "(";
             }
             finally
             {
@@ -171,5 +179,21 @@ namespace Parser
             Error("Expected constant expression");
             return 0;
         }
+
+        protected bool IsAssignmentOperator()
+        {
+            if (Lookahead().Type != TokenType.Operator) return false;
+            var op = Lookahead().Value;
+            return op == "=" || op.EndsWith("=") && op + Lookahead(1).Value !="==";
+        }
+
+        protected bool IsPrefixOperator()
+        {
+            if (Lookahead().Type != TokenType.Operator) return false;
+            var op = Lookahead().Value;
+            return op == "+" || op == "-" || op == "!" || op == "~" ||
+                   op == "++" || op == "--" || op == "&" || op == "*";
+        }
     }
+
 }
