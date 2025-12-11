@@ -6,7 +6,7 @@ This project implements a **parser** for a simplified C compiler. It is built on
 
 The parser reads C source code and verifies whether it follows the defined grammar rules. It also generates a parse tree or structured representation of the source program.
 
-Your parser consists of:
+The project consists of:
 
 * A **scanner** that tokenizes input.
 * A **parser** that checks syntax according to grammar.
@@ -18,11 +18,10 @@ Your parser consists of:
 ## 📁 Project Structure
 
 ```
-Parser/
+CCompiler/
 ├── Scanner/            # Tokenizer (existing)
 ├── Parser/
-│   ├── Parser.cs       # Recursive-descent parser
-│   ├── Grammar.cs      # Grammar definitions
+│   ├── Parsing.cs       # Recursive-descent parser
 │   ├── AST/            # Abstract Syntax Tree nodes
 │   └── Errors.cs       # Error reporting & recovery
 └── README.md            # This file
