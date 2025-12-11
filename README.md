@@ -1,176 +1,130 @@
-# C Compiler Parser Project
+# C Parser Project -- Scanner + Recursive-Descent Parser + AST
 
-This project implements a **parser** for a simplified C compiler. It is built on top of a custom scanner (lexer) and follows a structured recursive‑descent parsing approach.
+This project implements a **C-language front-end** consisting of:
 
-## 📌 Project Overview
+1.  **Scanner (Lexer)** -- converts raw source code into a stream of
+    tokens.\
+2.  **Recursive-Descent Parser** -- reads tokens and builds an
+    **Abstract Syntax Tree (AST)**.\
+3.  **AST Node System** -- represents declarations, statements,
+    expressions, and the whole program.
 
-The parser reads C source code and verifies whether it follows the defined grammar rules. It also generates a parse tree or structured representation of the source program.
+The system handles **declarations**, **variables**, **functions**,
+**statements**, **expressions**, **control flow**, and enforces that a
+valid program must contain exactly **one `main` function\`.**
 
-The project consists of:
+------------------------------------------------------------------------
 
-* A **scanner** that tokenizes input.
-* A **parser** that checks syntax according to grammar.
-* A **set of grammar rules** for declarations, functions, statements, and expressions.
-* Proper **error handling** for invalid syntax.
+## 1. Project Overview
 
----
+This project is the foundational front-end of a small C compiler.\
+Its purpose is to:
 
-## 📁 Project Structure
+-   Convert raw C source code → tokens → AST\
+-   Detect syntax errors with accurate `(line, column)` positions\
+-   Validate the program structure\
+-   Distinguish **pre-main declarations**, the **main() function**, and
+    **post-main declarations**\
+-   Build a clean, high-level AST representation suitable for later
+    compilation stages
 
-```
-CCompiler/
-├── Scanner/            # Tokenizer (existing)
-├── Parser/
-│   ├── Parsing.cs       # Recursive-descent parser
-│   ├── AST/            # Abstract Syntax Tree nodes
-│   └── Errors.cs       # Error reporting & recovery
-```
+------------------------------------------------------------------------
 
----
+## 2. Project Structure
 
-## 🔤 Grammar (Simplified)
+    /Scanner
+        Scanning.cs
+        Token.cs
+        CDefinitions.cs
 
-Below is the grammar used by the parser:
+    /Parser
+        Parsing.cs
+        ParserCore.cs
+        ParseException.cs
+        StatementParser.cs
+        ExpressionParser.cs
+        DeclarationParser.cs
+        /Nodes
+            AstNode.cs
+            Declaration Nodes
+            Statement Nodes
+            Expression Nodes
+            ProgramNode.cs
 
-### Program Structure
+------------------------------------------------------------------------
 
-```
-Program → PreMainDecl* MainFunc PostMainDecl*
-```
+## 3. Scanner (Lexer) Overview
 
-### Main Function Constraint
+The scanner performs a full lexical analysis of the input. It is
+responsible for:
 
-```
-MainFunc → "int" "main" "(" ")" CompoundStmt
-```
+### ✔ Tokenizing:
 
-If the `main` function does not exist → **syntax error**.
+-   Keywords
+-   Identifiers
+-   Numbers
+-   Strings
+-   Character literals
+-   Operators
+-   Delimiters
+-   Comments
 
-### Declarations
+### ✔ Tracking positions
 
-```
-PreMainDecl → VarDecl | FuncProto | FuncDef
-PostMainDecl → VarDecl | FuncDef
-```
+### ✔ Error detection
 
-### Variable Declaration
+### ✔ Appending EOF token
 
-```
-VarDecl → Type IDENT ( '=' Expr )? ';'
-```
+------------------------------------------------------------------------
 
-### Function Prototype
+## 4. AST Node System
 
-```
-FuncProto → Type IDENT '(' ParamList? ')' ';'
-```
+The AST contains: - Declarations\
+- Statements\
+- Expressions\
+- Program structure (PreMain, Main, PostMain)
 
-### Function Definition
+------------------------------------------------------------------------
 
-```
-FuncDef → Type IDENT '(' ParamList? ')' CompoundStmt
-```
+## 5. Parser Overview
 
-### Parameters
+-   Recursive-descent parser\
+-   Lookahead\
+-   LL(1)-style grammar\
+-   Expression precedence\
+-   Function parsing\
+-   Statement parsing\
+-   Full support for blocks `{}`
 
-```
-ParamList → Param (',' Param)*
-Param → Type IDENT
-```
+------------------------------------------------------------------------
 
-### Statements
+## 6. Parsing Workflow
 
-```
-Stmt → ExprStmt | IfStmt | WhileStmt | ReturnStmt | CompoundStmt
-```
+1.  Initialize parser\
+2.  Parse pre-main declarations\
+3.  Detect & require `main()`\
+4.  Parse post-main declarations\
+5.  Parse statements\
+6.  Parse expressions\
+7.  Return AST
 
----
+------------------------------------------------------------------------
 
-## 🧱 Parser Features
+## 7. Error Handling
 
-### ✔ Recursive Descent
+Scanner: non-fatal errors\
+Parser: throws ParseException on syntax errors
 
-Each rule in the grammar corresponds to a parser function.
+------------------------------------------------------------------------
 
-### ✔ Error Detection
+## 8. Example Flow
 
-Example: missing `;`, wrong parameter list, missing `main`, etc.
+Input:
 
-### ✔ Error Recovery
-
-Skips to safe tokens (`;`, `}`, etc.) to continue parsing.
-
-### ✔ Operator Precedence
-
-Handles arithmetic expressions with correct precedence:
-
-```
-Term → Factor (('*' | '/') Factor)*
-Expr → Term (('+' | '-') Term)*
-```
-
----
-
-## 🧪 Example Input
-
-```c
-int global_counter = 0;
-
-void increment_counter(int amount);
-
-int main() {
-    increment_counter(5);
-    return 0;
-}
-
-void increment_counter(int amount) {
-    global_counter += amount;
-}
+``` c
+int x = 5;
+int main() { x = x + 1; return x; }
 ```
 
----
-
-## ⚠ Error Example
-
-Invalid code:
-
-```c
-int x // = 5;
-= 5;
-```
-
-Parser output:
-
-```
-Syntax Error: unexpected '=' at line ...
-```
-
----
-
-## ▶ Running the Parser
-
-```bash
-dotnet run myprogram.c
-```
-
-The parser will print:
-
-* Pre-main declarations
-* Main function block
-* Post-main declarations
-* Syntax errors (if any)
-
----
-
-## 🚀 Future Improvements
-
-* Add full C expression grammar
-* Support arrays & pointers
-* Add symbol table
-* Add type checking
-
----
-
-## 📄 License
-
-MIT (or your choice)
+Goes through: Scanner → Tokens\
+Parser → AST
