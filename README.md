@@ -24,7 +24,6 @@ CCompiler/
 │   ├── Parsing.cs       # Recursive-descent parser
 │   ├── AST/            # Abstract Syntax Tree nodes
 │   └── Errors.cs       # Error reporting & recovery
-└── README.md            # This file
 ```
 
 ---
