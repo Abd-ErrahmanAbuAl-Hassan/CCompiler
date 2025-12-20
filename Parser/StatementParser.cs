@@ -137,7 +137,10 @@ namespace Parser
             var condition = ParseCondition();  
             ExpectDelimiter(')');
 
+            ExpectDelimiter('{');
             var body = ParseStatement();
+            ExpectDelimiter('}');
+
 
             return new WhileStmtNode
             {
@@ -149,7 +152,9 @@ namespace Parser
         private DoWhileStmtNode ParseDoWhileStatement()
         {
             ExpectKeyword("do");
+            ExpectDelimiter('{');
             var body = ParseStatement();
+            ExpectDelimiter('}');
 
             ExpectKeyword("while");
             ExpectDelimiter('(');
@@ -199,7 +204,10 @@ namespace Parser
             }
             ExpectDelimiter(')');
 
+            ExpectDelimiter('{');
             var body = ParseStatement();
+            ExpectDelimiter('}');
+
 
             return new ForStmtNode
             {

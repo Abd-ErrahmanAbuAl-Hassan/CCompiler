@@ -54,8 +54,8 @@ namespace Parser
             if (IsFunctionDeclarationAhead())
             {
                 var funcDecl = ParseFunctionDeclaration(typeName);
-                ExpectDelimiter(';'); 
-                return new ExprStmtNode { Expression = null }; 
+                ExpectDelimiter(';');
+                return new ExprStmtNode { Expression = null };
             }
 
             var varDecls = ParseVariableDeclarationList(typeName, false);
@@ -68,19 +68,30 @@ namespace Parser
             return CreateDeclarationBlock(varDecls);
         }
 
+        private bool IsFunctionDeclarationAhead()
+        {
+            if (Lookahead().Type != TokenType.Identifier)
+                return false;
+
+            var nextToken = Lookahead(1);
+            if (nextToken.Type == TokenType.Delimiter && nextToken.Value == "(")
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public List<DeclarationNode> ParseVariableDeclarationList(string typeName, bool isGlobal = false)
         {
             var declarations = new List<DeclarationNode>();
-
             do
             {
                 var varDecl = ParseSingleDeclarator(typeName);
                 declarations.Add(varDecl);
-
                 if (!CheckOperator(",")) break;
-                Consume(); // Consume ','
+                Consume();
             } while (true);
-
             ExpectDelimiter(';');
             return declarations;
         }
@@ -88,7 +99,6 @@ namespace Parser
         private VarDeclNode ParseSingleDeclarator(string typeName)
         {
             Token nameToken = ExpectIdentifier();
-
             var varDecl = new VarDeclNode
             {
                 TypeName = typeName,
@@ -96,20 +106,17 @@ namespace Parser
                 Line = nameToken.Line,
                 Column = nameToken.Column
             };
-
             if (CheckDelimiter('['))
             {
-                Consume(); // '['
+                Consume();
                 varDecl.ArraySize = ParseConstantExpression();
                 ExpectDelimiter(']');
             }
-
             if (CheckOperator("="))
             {
-                Consume(); // '='
+                Consume();
                 varDecl.Initializer = ParseExpression();
             }
-
             return varDecl;
         }
 
@@ -117,37 +124,13 @@ namespace Parser
         {
             var block = new BlockStmtNode();
             foreach (VarDeclNode varDecl in declarations)
-            {
                 block.Statements.Add(new VarDeclStmtNode { Declaration = varDecl });
-            }
             return block;
-        }
-
-        private bool IsFunctionDeclarationAhead()
-        {
-            int savedIndex = index;
-            try
-            {
-                var typeToken = Lookahead();
-                if (!PrimitiveTypes.Contains(typeToken.Value)) return false;
-
-                index++;
-
-                if (Lookahead().Type != TokenType.Identifier) return false;
-                index++; // Skip identifier
-
-                return CheckDelimiter('(');
-            }
-            finally
-            {
-                index = savedIndex;
-            }
         }
 
         private FuncDeclNode ParseFunctionDeclaration(string returnType)
         {
             var nameToken = ExpectIdentifier();
-
             var func = new FuncDeclNode
             {
                 ReturnType = returnType,
@@ -155,32 +138,16 @@ namespace Parser
                 Line = nameToken.Line,
                 Column = nameToken.Column
             };
-
             ExpectDelimiter('(');
-
             if (!CheckDelimiter(')'))
             {
                 var parameters = ParseParameterList();
-                foreach (var param in parameters)
-                    func.Parameters.Add(param);
+                foreach (var param in parameters) func.Parameters.Add(param);
             }
-
             ExpectDelimiter(')');
-
-            if (CheckDelimiter(';'))
-            {
-                Consume(); 
-            }
-            else if (CheckDelimiter('{'))
-            {
-                func.Body = ParseBlock();
-            }
-            else
-            {
-                Error("Expected ';' or '{' after function declaration");
-                throw new ParseException("Invalid function declaration");
-            }
-
+            if (CheckDelimiter(';')) Consume();
+            else if (CheckDelimiter('{')) func.Body = ParseBlock();
+            else { Error("Expected ';' or '{'"); throw new ParseException("Invalid func decl"); }
             return func;
         }
 
@@ -188,7 +155,6 @@ namespace Parser
         {
             var returnType = ParseTypeSpecifier();
             var mainToken = ExpectKeyword("main");
-
             var func = new FuncDeclNode
             {
                 ReturnType = returnType,
@@ -196,41 +162,30 @@ namespace Parser
                 Line = mainToken.Line,
                 Column = mainToken.Column
             };
-
             ExpectDelimiter('(');
             ExpectDelimiter(')');
             func.Body = ParseBlock();
-
+            isMainParsed = true;
             return func;
         }
 
         private List<ParamNode> ParseParameterList()
         {
             var parameters = new List<ParamNode>();
-
             do
             {
                 var paramType = ParseTypeSpecifier();
                 string paramName = "";
-
-                if (Lookahead().Type == TokenType.Identifier)
+                if (!isMainParsed)
+                {
+                    if(Lookahead().Type == TokenType.Identifier)
+                        paramName = ExpectIdentifier().Value;
+                }else 
                     paramName = ExpectIdentifier().Value;
-
-                parameters.Add(new ParamNode
-                {
-                    TypeName = paramType,
-                    Name = paramName
-                });
-
-                if (CheckOperator(","))
-                {
-                    Consume();
-                    continue;
-                }
-
+                parameters.Add(new ParamNode { TypeName = paramType, Name = paramName });
+                if (CheckOperator(",")) { Consume(); continue; }
                 break;
             } while (true);
-
             return parameters;
         }
     }

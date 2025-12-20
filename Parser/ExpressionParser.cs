@@ -43,10 +43,7 @@ namespace Parser
             ParseLeftAssociativeBinary(ParseBitwiseOr, "&&");
 
         private ExpressionNode ParseBitwiseOr() =>
-            ParseLeftAssociativeBinary(ParseBitwiseXor, "|");
-
-        private ExpressionNode ParseBitwiseXor() =>
-            ParseLeftAssociativeBinary(ParseBitwiseAnd, "^");
+            ParseLeftAssociativeBinary(ParseBitwiseAnd, "|");
 
         private ExpressionNode ParseBitwiseAnd() =>
             ParseLeftAssociativeBinary(ParseEquality, "&");
@@ -137,8 +134,8 @@ namespace Parser
                     if (CheckDelimiter('('))
                         return ParseParenthesizedExpression();
 
-                    Error($"Expected primary expression, got {token.Type} '{token.Value}'", token);
-                    return null;
+                Error($"Expected primary expression, got {token.Type} '{token.Value}'", token);
+                return null;
             }
         }
 

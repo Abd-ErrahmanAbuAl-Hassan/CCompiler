@@ -1,35 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Parser.Nodes
+﻿namespace Parser.Nodes
 {
     public abstract class ExpressionNode : AstNode { }
 
     public class NumberExpressionNode : ExpressionNode
     {
         public string Value { get; set; }
-        public override string ToString() => $"Num[{Value}]";
     }
 
     public class StringExpressionNode : ExpressionNode
     {
         public string Value { get; set; }
-        public override string ToString() => $"Str[\"{Value}\"]";
     }
 
     public class CharacterExpressionNode : ExpressionNode
     {
         public char Value { get; set; }
-        public override string ToString() => $"Char['{Value}']";
     }
 
     public class IdentifierExpressionNode : ExpressionNode
     {
         public string Name { get; set; }
-        public override string ToString() => $"Id[{Name}]";
     }
 
     public class BinaryExpressionNode : ExpressionNode
@@ -38,7 +28,6 @@ namespace Parser.Nodes
         public ExpressionNode Left { get; set; }
         public ExpressionNode Right { get; set; }
 
-        public override string ToString() => $"BinOp[{Left} {Op} {Right}]";
     }
 
     public class UnaryExpressionNode : ExpressionNode
@@ -47,12 +36,6 @@ namespace Parser.Nodes
         public ExpressionNode Operand { get; set; }
         public bool IsPrefix { get; set; } = true;
 
-        public override string ToString()
-        {
-            if (IsPrefix)
-                return $"Unary[{Op}{Operand}]";
-            return $"Unary[{Operand}{Op}]";
-        }
     }
 
     public class AssignExpressionNode : ExpressionNode
@@ -61,7 +44,6 @@ namespace Parser.Nodes
         public ExpressionNode Right { get; set; }
         public string Op { get; set; } = "="; // For compound assignments
 
-        public override string ToString() => $"Assign[{Left} {Op} {Right}]";
     }
 
     public class CallExpressionNode : ExpressionNode
@@ -69,11 +51,6 @@ namespace Parser.Nodes
         public ExpressionNode Callee { get; set; }
         public List<ExpressionNode> Args { get; } = new();
 
-        public override string ToString()
-        {
-            var argsStr = string.Join(", ", Args);
-            return $"Call[{Callee}({argsStr})]";
-        }
     }
 
     public class IndexExpressionNode : ExpressionNode
@@ -81,10 +58,6 @@ namespace Parser.Nodes
         public ExpressionNode Target { get; set; }
         public ExpressionNode Index { get; set; }
 
-        public override string ToString() => $"Index[{Target}[{Index}]]";
     }
-
-    
-
    
 }

@@ -7,6 +7,7 @@ namespace Parser
         protected readonly List<Token> tokens;
         protected int index = 0;
         protected readonly List<string> errors = new List<string>();
+        protected bool isMainParsed = false;
 
         protected static readonly HashSet<string> PrimitiveTypes = new()
         {
@@ -50,12 +51,12 @@ namespace Parser
             {
                 if (Lookahead().Type == TokenType.Delimiter && Lookahead().Value == ";")
                 {
-                    Consume(); // Consume the ';' and break
+                    Consume(); 
                     return;
                 }
                 else if (Lookahead().Type == TokenType.Delimiter && Lookahead().Value == "}")
                 {
-                    return; // Don't consume '}', let ParseBlock handle it
+                    return; 
                 }
                 else if (Lookahead().Type == TokenType.Keyword)
                 {
@@ -165,7 +166,7 @@ namespace Parser
                 return Consume().Value;
             }
             Error("Expected type specifier");
-            return "int";
+            return "";
         }
 
         protected int ParseConstantExpression()

@@ -1,3 +1,4 @@
+double fun (int c){}
 int main() {
     int x,y;
     // This is a single-line comment
@@ -9,5 +10,7 @@ int main() {
     } else {
         y = 3.1; // Another comment
     }
+  xnn(x+1);
     return 0;
 }
+int xnn(int  x, int d ){}

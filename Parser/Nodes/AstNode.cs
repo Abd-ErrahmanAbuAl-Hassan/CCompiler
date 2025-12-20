@@ -1,4 +1,6 @@
-﻿namespace Parser.Nodes
+﻿using System.Text;
+
+namespace Parser.Nodes
 {
     public abstract class AstNode
     {
@@ -14,7 +16,7 @@
 
         public override string ToString()
         {
-            var sb = new System.Text.StringBuilder();
+            var sb = new StringBuilder();
             sb.AppendLine("Pre-main declarations:");
             foreach (var decl in PreMainDecls)
                 sb.AppendLine($"  {decl}");

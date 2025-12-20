@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Text;
+﻿using System.Text;
 
 namespace Scanner
 {
@@ -175,8 +174,6 @@ namespace Scanner
         {
             int start = _index;
             int startColumn = _column;
-            bool hasDecimal = false;
-            bool hasExponent = false;
 
             // Integer part
             while (!IsAtEnd() && char.IsDigit(Peek()))
@@ -185,25 +182,25 @@ namespace Scanner
             // Decimal point
             if (!IsAtEnd() && Peek() == '.')
             {
-                hasDecimal = true;
                 Advance();
 
                 // Fractional part (must have at least one digit)
                 if (!IsAtEnd() && char.IsDigit(Peek()))
                 {
                     while (!IsAtEnd() && char.IsDigit(Peek()))
-                        Advance();
+                        Advance(); 
                 }
-                else if (!hasExponent) // Allow .e2 format
+                else // Number like "2." not allowed, must at least one number after "." or Scientific notation
                 {
-                    _errors.Add($"Error at {_line}:{startColumn}: Invalid number format");
+                    char next = Peek();
+                    if (next != 'e' && next != 'E')
+                        _errors.Add($"Error at {_line}:{startColumn}: Invalid number format");
                 }
             }
 
             // Exponent part
             if (!IsAtEnd() && (Peek() == 'e' || Peek() == 'E'))
             {
-                hasExponent = true;
                 Advance();
 
                 // Optional sign
@@ -250,7 +247,7 @@ namespace Scanner
                 else if (c == '"')
                 {
                     Advance(); // Skip closing quote
-                    return new Token(TokenType.StringLiteral, sb.ToString().TrimEnd('\r', '\n'), _line, startColumn);
+                    return new Token(TokenType.StringLiteral, sb.ToString(), _line, startColumn);
                 }
                 else if (c == '\n')
                 {
