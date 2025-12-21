@@ -43,7 +43,6 @@ namespace Parser
                 return null;
             }
         }
-
         private StatementNode ParseControlFlowStatement()
         {
             var keyword = Lookahead().Value;
@@ -68,14 +67,12 @@ namespace Parser
                     return ParseExpressionStatement();
             }
         }
-
         private StatementNode ParseExpressionStatement()
         {
             var expr = ParseExpression();  
             ExpectDelimiter(';');
             return new ExprStmtNode { Expression = expr };
         }
-
         public BlockStmtNode ParseBlock()
         {
             ExpectDelimiter('{');
@@ -88,24 +85,12 @@ namespace Parser
                 {
                     block.Statements.Add(stmt);
                 }
-                else
-                {
-                    while (!IsAtEnd && !CheckDelimiter('}'))
-                    {
-                        if (CheckDelimiter(';'))
-                        {
-                            Consume();
-                            break;
-                        }
-                        Consume();
-                    }
-                }
+                
             }
 
             ExpectDelimiter('}');
             return block;
         }
-
         private IfStmtNode ParseIfStatement()
         {
             ExpectKeyword("if");
@@ -129,7 +114,6 @@ namespace Parser
                 ElseBranch = elseBranch
             };
         }
-
         private WhileStmtNode ParseWhileStatement()
         {
             ExpectKeyword("while");
@@ -148,7 +132,6 @@ namespace Parser
                 Body = body
             };
         }
-
         private DoWhileStmtNode ParseDoWhileStatement()
         {
             ExpectKeyword("do");
@@ -168,7 +151,6 @@ namespace Parser
                 Condition = condition
             };
         }
-
         private ForStmtNode ParseForStatement()
         {
             ExpectKeyword("for");
@@ -217,7 +199,6 @@ namespace Parser
                 Body = body
             };
         }
-
         private ReturnStmtNode ParseReturnStatement()
         {
             var returnToken = ExpectKeyword("return");
@@ -233,7 +214,6 @@ namespace Parser
             ExpectDelimiter(';');
             return node;
         }
-
         private BreakStmtNode ParseBreakStatement()
         {
             var breakToken = ExpectKeyword("break");
@@ -244,7 +224,6 @@ namespace Parser
                 Column = breakToken.Column
             };
         }
-
         private ContinueStmtNode ParseContinueStatement()
         {
             var continueToken = ExpectKeyword("continue");

@@ -14,36 +14,28 @@ namespace Parser
             "int", "float", "double", "char", "short", "long",
             "signed", "unsigned", "void"
         };
-
         public List<string> GetErrors() => errors;
-
         protected void Error(string message, Token token = null)
         {
             token = token ?? Lookahead();
             errors.Add($"Syntax error at {token.Line}:{token.Column} — {message}");
         }
-
         public ParserCore(List<Token> _tokens)
         {
             tokens = _tokens.Where(t => t.Type != TokenType.Comment && t.Type != TokenType.Whitespace).ToList();
         }
-
-       
         protected Token Lookahead(int offset=0)
         {
             if (index + offset >= tokens.Count)
                 return new Token(TokenType.EOF, "", -1, -1);
             return tokens[index + offset];
         }
-
         protected bool IsAtEnd => index >= tokens.Count || Lookahead().Type == TokenType.EOF;
-
         protected Token Consume()
         {
             if (IsAtEnd) return null;
             return tokens[index++];
         }
-
         protected void Synchronize()
         {
             // Skip tokens until we find a statement boundary
@@ -70,7 +62,6 @@ namespace Parser
                 Consume();
             }
         }
-
         protected Token ExpectToken(TokenType type, string value = null)
         {
             if (IsAtEnd)
@@ -88,37 +79,15 @@ namespace Parser
 
             return Consume();
         }
-
-        protected Token ExpectDelimiter(char delimiter)
-        {
-            if (IsAtEnd)
-            {
-                Error($"Expected delimiter '{delimiter}', got end of input");
-                throw new ParseException("Unexpected end of input");
-            }
-
-            var token = Lookahead();
-            if (token.Type == TokenType.Delimiter && token.Value == delimiter.ToString())
-            {
-                return Consume();
-            }
-
-            Error($"Expected delimiter '{delimiter}', got {token.Type} '{token.Value}'", token);
-            throw new ParseException("Delimiter mismatch");
-        }
-
+        protected Token ExpectDelimiter(char delimiter) => ExpectToken(TokenType.Delimiter, delimiter.ToString());
         protected Token ExpectKeyword(string keyword) => ExpectToken(TokenType.Keyword, keyword);
         protected Token ExpectIdentifier() => ExpectToken(TokenType.Identifier);
-
         protected bool CheckKeyword(string keyword) =>
             !IsAtEnd && Lookahead().Type == TokenType.Keyword && Lookahead().Value == keyword;
-
         protected bool CheckDelimiter(char delimiter) =>
             !IsAtEnd && Lookahead().Type == TokenType.Delimiter && Lookahead().Value == delimiter.ToString();
-
         protected bool CheckOperator(string op) =>
             !IsAtEnd && Lookahead().Type == TokenType.Operator && Lookahead().Value == op;
-
         protected bool IsDeclarationStart()
         {
             if (IsAtEnd) return false;
@@ -130,7 +99,6 @@ namespace Parser
             }
             return false;
         }
-
         protected bool IsMainAhead()
         {
             int savedIndex = index;
@@ -158,7 +126,6 @@ namespace Parser
                 index = savedIndex;
             }
         }
-
         protected string ParseTypeSpecifier()
         {
             if (Lookahead().Type == TokenType.Keyword && PrimitiveTypes.Contains(Lookahead().Value))
@@ -168,10 +135,9 @@ namespace Parser
             Error("Expected type specifier");
             return "";
         }
-
         protected int ParseConstantExpression()
         {
-            if (Lookahead().Type == TokenType.Number)
+            if (Lookahead().Type == TokenType.Number)//[1]
             {
                 var token = Consume();
                 if (int.TryParse(token.Value, out int result))
@@ -180,20 +146,17 @@ namespace Parser
             Error("Expected constant expression");
             return 0;
         }
-
         protected bool IsAssignmentOperator()
         {
             if (Lookahead().Type != TokenType.Operator) return false;
             var op = Lookahead().Value;
             return op == "=" || op.EndsWith("=") && op + Lookahead(1).Value !="==";
         }
-
         protected bool IsPrefixOperator()
         {
-            if (Lookahead().Type != TokenType.Operator) return false;
+            if (Lookahead().Type != TokenType.Operator) return false; 
             var op = Lookahead().Value;
-            return op == "+" || op == "-" || op == "!" || op == "~" ||
-                   op == "++" || op == "--" || op == "&" || op == "*";
+            return op == "++" || op == "--" ;
         }
     }
 

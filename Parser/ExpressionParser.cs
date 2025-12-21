@@ -8,12 +8,7 @@ namespace Parser
         public ExpressionParser(List<Token> tokens) : base(tokens) { }
 
         public ExpressionNode ParseExpression() => ParseAssignment();
-
-        public ExpressionNode ParseCondition()
-        {
-            return ParseLogicalOr();  
-        }
-
+        public ExpressionNode ParseCondition() => ParseLogicalOr();
         private ExpressionNode ParseAssignment()
         {
             var left = ParseLogicalOr();  
@@ -35,34 +30,18 @@ namespace Parser
 
             return left;
         }
-
         private ExpressionNode ParseLogicalOr() =>
             ParseLeftAssociativeBinary(ParseLogicalAnd, "||");
-
         private ExpressionNode ParseLogicalAnd() =>
-            ParseLeftAssociativeBinary(ParseBitwiseOr, "&&");
-
-        private ExpressionNode ParseBitwiseOr() =>
-            ParseLeftAssociativeBinary(ParseBitwiseAnd, "|");
-
-        private ExpressionNode ParseBitwiseAnd() =>
-            ParseLeftAssociativeBinary(ParseEquality, "&");
-
+            ParseLeftAssociativeBinary(ParseEquality, "&&");
         private ExpressionNode ParseEquality() =>
             ParseLeftAssociativeBinary(ParseRelational, "==", "!=");
-
         private ExpressionNode ParseRelational() =>
-            ParseLeftAssociativeBinary(ParseShift, "<", ">", "<=", ">=");
-
-        private ExpressionNode ParseShift() =>
-            ParseLeftAssociativeBinary(ParseAdditive, "<<", ">>");
-
+            ParseLeftAssociativeBinary(ParseAdditive, "<", ">", "<=", ">=");
         private ExpressionNode ParseAdditive() =>
             ParseLeftAssociativeBinary(ParseMultiplicative, "+", "-");
-
         private ExpressionNode ParseMultiplicative() =>
             ParseLeftAssociativeBinary(ParseUnary, "*", "/", "%");
-
         private ExpressionNode ParseUnary()
         {
             if (IsPrefixOperator())
@@ -82,7 +61,6 @@ namespace Parser
 
             return ParsePostfix();
         }
-
         private ExpressionNode ParsePostfix()
         {
             var expr = ParsePrimary();
@@ -109,13 +87,12 @@ namespace Parser
 
             return expr;
         }
-
         private ExpressionNode ParsePrimary()
         {
             if (IsAtEnd)
             {
                 Error("Unexpected end of input");
-                return null;
+                throw new ParseException("Unexpected End");
             }
 
             var token = Lookahead();
@@ -135,10 +112,9 @@ namespace Parser
                         return ParseParenthesizedExpression();
 
                 Error($"Expected primary expression, got {token.Type} '{token.Value}'", token);
-                return null;
+                throw new ParseException($"Invalid Token: {token.Value}");
             }
         }
-
         private ExpressionNode ParseNumberLiteral()
         {
             var token = Consume();
@@ -149,7 +125,6 @@ namespace Parser
                 Column = token.Column
             };
         }
-
         private ExpressionNode ParseStringLiteral()
         {
             var token = Consume();
@@ -160,7 +135,6 @@ namespace Parser
                 Column = token.Column
             };
         }
-
         private ExpressionNode ParseCharacterLiteral()
         {
             var token = Consume();
@@ -172,7 +146,6 @@ namespace Parser
                 Column = token.Column
             };
         }
-
         private ExpressionNode ParseIdentifier()
         {
             var token = Consume();
@@ -183,7 +156,6 @@ namespace Parser
                 Column = token.Column
             };
         }
-
         private ExpressionNode ParseParenthesizedExpression()
         {
             Consume(); // '('
@@ -191,11 +163,10 @@ namespace Parser
             ExpectDelimiter(')');
             return expr;
         }
-
         private ExpressionNode ParseArrayIndex(ExpressionNode target)
         {
             Consume(); // '['
-            var index = ParseExpression();
+            var index = ParseExpression(); 
             ExpectDelimiter(']');
 
             return new IndexExpressionNode
@@ -204,7 +175,6 @@ namespace Parser
                 Index = index
             };
         }
-
         private ExpressionNode ParseFunctionCall(ExpressionNode callee)
         {
             Consume(); // '('
@@ -220,7 +190,6 @@ namespace Parser
             ExpectDelimiter(')');
             return call;
         }
-
         private ExpressionNode ParsePostfixUnary(ExpressionNode operand)
         {
             var opToken = Consume();
@@ -254,7 +223,6 @@ namespace Parser
 
             return left;
         }
-
         public List<ExpressionNode> ParseArgumentList()
         {
             var args = new List<ExpressionNode>();

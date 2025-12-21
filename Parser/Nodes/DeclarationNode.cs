@@ -6,8 +6,8 @@
     {
         public string TypeName { get; set; }
         public string Name { get; set; }
-        public ExpressionNode Initializer { get; set; }
-        public int? ArraySize { get; set; }
+        public ExpressionNode Initializer { get; set; }//
+        public int? ArraySize { get; set; }//
     }
 
     public class FuncDeclNode : DeclarationNode

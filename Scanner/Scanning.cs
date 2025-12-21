@@ -15,7 +15,6 @@ namespace Scanner
         {
             _source = source;
         }
-
         public List<Token> Scan()
         {
             while (!IsAtEnd())
@@ -67,15 +66,15 @@ namespace Scanner
                 }
 
                 // Handle character literals
-                if (current == '\'')
+                if (current == '\'')       
                 {
                     _tokens.Add(HandleCharacterLiteral());
                     continue;
                 }
 
-                // Handle operators (multi-character first)
+                // Handle operators (multi-character first) 
                 string op = $"{current}{PeekAhead()}";
-                if (CDefinitions.MultiCharOperators.Contains($"{current}{PeekAhead()}"))
+                if (CDefinitions.MultiCharOperators.Contains($"{op}"))
                 {
                     _tokens.Add(HandleOperator(op.Length));
                     continue;
@@ -131,7 +130,7 @@ namespace Scanner
 
             // Already matched "/*"
             Advance(2);
-
+            
             while (!IsAtEnd())
             {
                 if (Peek() == '*' && PeekAhead() == '/')
@@ -176,7 +175,7 @@ namespace Scanner
             int startColumn = _column;
 
             // Integer part
-            while (!IsAtEnd() && char.IsDigit(Peek()))
+            while (!IsAtEnd() && char.IsDigit(Peek())) //12354.
                 Advance();
 
             // Decimal point
@@ -199,7 +198,7 @@ namespace Scanner
             }
 
             // Exponent part
-            if (!IsAtEnd() && (Peek() == 'e' || Peek() == 'E'))
+            if (!IsAtEnd() && (Peek() == 'e' || Peek() == 'E')) // 
             {
                 Advance();
 
@@ -224,45 +223,15 @@ namespace Scanner
         }
 
         private Token HandleStringLiteral()
-        {
+        {   
+            Advance();
+            int start = _index;
             int startColumn = _column;
-            Advance(); // Skip opening quote
-
-            StringBuilder sb = new StringBuilder();
-            bool escaped = false;
-
-            while (!IsAtEnd())
-            {
-                char c = Peek();
-
-                if (escaped)
-                {
-                    sb.Append(ParseEscapeSequence(c));
-                    escaped = false;
-                }
-                else if (c == '\\')
-                {
-                    escaped = true;
-                }
-                else if (c == '"')
-                {
-                    Advance(); // Skip closing quote
-                    return new Token(TokenType.StringLiteral, sb.ToString(), _line, startColumn);
-                }
-                else if (c == '\n')
-                {
-                    _errors.Add($"Error at {_line}:{startColumn}: Unterminated string literal");
-                    return new Token(TokenType.StringLiteral, sb.ToString().TrimEnd('\r', '\n'), _line, startColumn);
-                }
-                else
-                {
-                    sb.Append(c);
-                }
-                Advance();
-            }
-
-            _errors.Add($"Error at {_line}:{startColumn}: Unterminated string literal");
-            return new Token(TokenType.StringLiteral, sb.ToString(), _line, startColumn);
+            while (!IsAtEnd() && Peek()!='"')  Advance();
+            
+            string str = _source.Substring(start, _index - start);
+            Advance();
+            return new Token(TokenType.StringLiteral, str , _line, startColumn);
         }
 
         private Token HandleCharacterLiteral()

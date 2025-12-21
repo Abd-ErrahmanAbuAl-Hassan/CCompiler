@@ -26,7 +26,6 @@ namespace Parser
                 return null;
             }
         }
-
         public override StatementNode ParseStatement()
         {
             if (IsAtEnd) return null;
@@ -46,7 +45,6 @@ namespace Parser
                 return null;
             }
         }
-
         private StatementNode ParseDeclarationStatement()
         {
             string typeName = ParseTypeSpecifier();
@@ -67,7 +65,6 @@ namespace Parser
 
             return CreateDeclarationBlock(varDecls);
         }
-
         private bool IsFunctionDeclarationAhead()
         {
             if (Lookahead().Type != TokenType.Identifier)
@@ -81,7 +78,6 @@ namespace Parser
 
             return false;
         }
-
         public List<DeclarationNode> ParseVariableDeclarationList(string typeName, bool isGlobal = false)
         {
             var declarations = new List<DeclarationNode>();
@@ -95,7 +91,6 @@ namespace Parser
             ExpectDelimiter(';');
             return declarations;
         }
-
         private VarDeclNode ParseSingleDeclarator(string typeName)
         {
             Token nameToken = ExpectIdentifier();
@@ -119,7 +114,6 @@ namespace Parser
             }
             return varDecl;
         }
-
         private BlockStmtNode CreateDeclarationBlock(List<DeclarationNode> declarations)
         {
             var block = new BlockStmtNode();
@@ -127,7 +121,6 @@ namespace Parser
                 block.Statements.Add(new VarDeclStmtNode { Declaration = varDecl });
             return block;
         }
-
         private FuncDeclNode ParseFunctionDeclaration(string returnType)
         {
             var nameToken = ExpectIdentifier();
@@ -150,7 +143,6 @@ namespace Parser
             else { Error("Expected ';' or '{'"); throw new ParseException("Invalid func decl"); }
             return func;
         }
-
         public FuncDeclNode ParseMainDeclaration()
         {
             var returnType = ParseTypeSpecifier();
@@ -168,7 +160,6 @@ namespace Parser
             isMainParsed = true;
             return func;
         }
-
         private List<ParamNode> ParseParameterList()
         {
             var parameters = new List<ParamNode>();

@@ -1,6 +1,6 @@
 ﻿namespace Parser.Nodes
 {
-    public abstract class ExpressionNode : AstNode { }
+    public abstract class ExpressionNode : AstNode { } 
 
     public class NumberExpressionNode : ExpressionNode
     {
